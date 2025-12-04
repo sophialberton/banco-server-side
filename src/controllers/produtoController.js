@@ -1,4 +1,4 @@
-const { produto, categoria, pedido } = require('../models/index');
+const { produto, categoria, pedido } = require('../../models/index');
 const { Op } = require('sequelize');
 
 // Criar produto
