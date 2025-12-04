@@ -1,94 +1,74 @@
-const { produto, categoria, pedido } = require('../../models/index');
-const { Op } = require('sequelize');
+const produtoService = require('../service/produto.service');
 
-// Criar produto
-// A lógica de criar pedido automático será feita pelo TRIGGER no banco de dados
+// Função auxiliar para padronizar erros
+const tratarErro = (res, erro) => {
+    // Se a mensagem for "Produto não encontrado", retorna 404, senão 500 ou 400
+    if (erro.message.includes('não encontrado')) {
+        return res.status(404).json({ erro: erro.message });
+    }
+    res.status(500).json({ erro: erro.message });
+};
+
 exports.criar = async (req, res) => {
     try {
-        const { nome_produto, qtde_produto, id_categoria } = req.body;
-        const novo = await produto.create({ nome_produto, qtde_produto, id_categoria });
+        const novo = await produtoService.criarProduto(req.body);
         res.status(201).json(novo);
     } catch (err) {
-        res.status(500).json({ erro: 'Erro ao criar produto', detalhe: err.message });
+        tratarErro(res, err);
     }
 };
 
-// Listar todos com Categoria
 exports.listar = async (req, res) => {
     try {
-        const lista = await produto.findAll({
-            include: [{ model: categoria }] // Join com categoria
-        });
+        const lista = await produtoService.listarProdutos();
         res.json(lista);
     } catch (err) {
-        res.status(500).json({ erro: err.message });
+        tratarErro(res, err);
     }
 };
 
-// Buscar por ID
 exports.buscar = async (req, res) => {
     try {
-        const item = await produto.findByPk(req.params.id, {
-            include: [{ model: categoria }]
-        });
-        if (!item) return res.status(404).json({ erro: 'Produto não encontrado' });
+        const item = await produtoService.buscarProdutoPorId(req.params.id);
         res.json(item);
     } catch (err) {
-        res.status(500).json({ erro: err.message });
+        tratarErro(res, err);
     }
 };
 
-// Atualizar produto
 exports.atualizar = async (req, res) => {
     try {
-        // O Trigger também pode ser configurado para disparar no UPDATE se necessário
-        await produto.update(req.body, {
-            where: { cod_produto: req.params.id }
-        });
-        const atualizado = await produto.findByPk(req.params.id);
+        const atualizado = await produtoService.atualizarProduto(req.params.id, req.body);
         res.json(atualizado);
     } catch (err) {
-        res.status(500).json({ erro: err.message });
+        tratarErro(res, err);
     }
 };
 
-// Deletar
 exports.deletar = async (req, res) => {
     try {
-        await produto.destroy({
-            where: { cod_produto: req.params.id }
-        });
+        await produtoService.deletarProduto(req.params.id);
         res.json({ mensagem: 'Produto deletado com sucesso' });
     } catch (err) {
-        res.status(500).json({ erro: err.message });
+        tratarErro(res, err);
     }
 };
 
-// Consulta: Produtos por Categoria (Requisito do Prompt)
+// Consultas Específicas
 exports.porCategoria = async (req, res) => {
     try {
-        const { id } = req.params;
-        const lista = await produto.findAll({
-            where: { id_categoria: id },
-            include: [{ model: categoria }]
-        });
+        const lista = await produtoService.buscarPorCategoria(req.params.id);
         res.json(lista);
     } catch (err) {
-        res.status(500).json({ erro: err.message });
+        tratarErro(res, err);
     }
 };
 
-// Consulta: Produtos filtrados por quantidade (Ex: Produtos com estoque baixo)
-// Ou conforme pedido no prompt: "consultas de produto... por quantidade de pedido" (interpretação pode variar, fiz por qtde_pedido na tabela pedido)
 exports.porPedidos = async (req, res) => {
     try {
-        const { qtde } = req.params;
-        const lista = await pedido.findAll({
-            where: { qtde_pedido: { [Op.gte]: qtde } }, // Maior ou igual a quantidade informada
-            include: [{ model: produto }]
-        });
+        const lista = await produtoService.buscarPedidosPorQuantidade(req.params.qtde);
         res.json(lista);
     } catch (err) {
-        res.status(500).json({ erro: err.message });
+        tratarErro(res, err);
     }
 };
