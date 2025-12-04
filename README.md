@@ -1,41 +1,177 @@
-# banco-server-side
-N3
+# N3 - Banco de Dados e Server-Side
 
-Nova estrutura 
+Este projeto integra uma API RESTful (Node.js) com um Banco de Dados Relacional (MySQL/MariaDB), utilizando ORM (Sequelize) para persistência de dados.
 
-banco-server-side/
-├── sql/                   <-- Seus scripts SQL (Trigger, Views, etc)
-├── src/
-│   ├── config/            <-- (Opcional, pode ficar em data/db.js)
-│   ├── controllers/       <-- Recebe requisição, chama service, devolve JSON
-│   ├── data/              <-- Conecta no BD e executa SQL (Substitui os Models)
-│   ├── routes/            <-- Rotas do Express
-│   ├── service/           <-- Regras de negócio e validações
-│   └── app.js             <-- Configuração do Express
-├── server.js              <-- Ponto de entrada (Inicia DB e Server)
-└── package.json
+O objetivo é atender aos requisitos da avaliação N3, demonstrando o uso de Triggers, Views, Procedures, Consultas Complexas e Autenticação JWT.
+## 🚀 Pré-requisitos
+
+Antes de começar, certifique-se de ter instalado:
+    Node.js (v18 ou superior)
+    MySQL ou MariaDB rodando localmente.
+    Um cliente SQL (MySQL Workbench, DBeaver, HeidiSQL) para rodar os scripts manuais.
+
+# 🛠️ Instalação e Configuração
+### 1. Clonar o Repositório
+
+- Abra o terminal e rode:
+```Bash
+git clone https://github.com/sophialberton/banco-server-side.git
+cd banco-server-side
+```
+
+### 2. Instalar Dependências
+
+- sInstale as bibliotecas necessárias (Express, Sequelize, MySQL2, JWT, etc.):
+
+```bash
+npm install
+```
+### 3. Configurar o Banco de Dados
+
+- Abra o seu cliente SQL (Workbench/DBeaver).
+
+    Crie um banco de dados vazio chamado n3_banco:
+    ```SQL
+    CREATE DATABASE n3_banco;
+    ```
+
+    Verifique o arquivo src/config/database.js no projeto. Ele está configurado por padrão assim:
+
+        User: root
+        Pass: (vazio)
+        Host: localhost
+        Dialect: mysql
+
+    _Se o seu banco tiver senha, altere este arquivo._
+
+## ▶️ Executando o Projeto
+### 1. Iniciar o Servidor (O Passo Mágico ✨)
+
+- Rode o comando abaixo. Ele fará várias coisas automaticamente:
+
+    - Conecta ao banco via ORM.
+
+    - Cria as tabelas (usuario, categoria, produto, pedido) se não existirem.
+
+    - Cria/Atualiza o TRIGGER automaticamente (Regra de Negócio N3).
+```
+npm start
+```
+
+Você verá no console:
+```bash
+"Banco de dados sincronizado (Sequelize)." "Trigger 'trg_pedido_automatico' configurado com sucesso." "Servidor N3 (Sequelize) rodando na porta 3000"
+```
+
+### 2. Rodar Scripts Manuais (Obrigatório para N3 📄)
+
+- Embora o sistema funcione 100% via código, a avaliação exige Views e Procedures. O Sequelize não gerencia isso nativamente da mesma forma.
+
+    - Vá até a pasta sql/ do projeto.
+    - Abra seu Workbench/DBeaver.
+    - Execute o conteúdo de:
+
+        `sql/views.sql` (Cria as Views de relatórios).
+
+        `sql/procedure.sql` (Cria a Procedure de atualização de estoque).
+
+* Isso garante que o banco tenha todos os objetos exigidos pelo professor.
+## 🖥️ Usando o Menu Interativo (CLI)
+
+Para facilitar a apresentação e os testes sem precisar usar Postman/Insomnia, criamos um menu no terminal.
+
+Em outro terminal (mantenha o servidor rodando), execute:
+
+```bash
+node menu_cli.js
+```
+
+### 🚀 Fluxo Recomendado para Apresentação
+
+---
+
+### 1️⃣ Resetar o Ambiente (Panic Button)
+
+Para garantir que o banco está limpo e o Trigger foi recriado corretamente:
+
+- Escolha a **Opção 99** no menu.  
+- Confirme digitando **RESET**.  
+- **Resultado:** O banco será limpo e a categoria **"Geral"** será criada.
+
+---
+
+### 2️⃣ Autenticação (Requisito: JWT)
+
+O sistema exige login para operações de escrita:
+
+- Escolha a **Opção 1 (Login)**.  
+- Como o banco foi resetado, crie um usuário quando solicitado.  
+- **Resultado:** Você receberá um **Token JWT** e o status mudará para **LOGADO**.
+
+---
+
+### 3️⃣ Preparar Dados (Requisito: CRUD Simples)
+
+Precisamos de uma categoria para criar produtos:
+
+- Escolha a **Opção 3 (Gerenciar Categorias)**.  
+- Escolha **2 (Criar)**.  
+- Nome: **Eletrônicos**.
+
+---
+
+### 4️⃣ O Show Principal: Trigger de Pedido (Requisito: Trigger)
+
+Regra de negócio: **"Se quantidade <= 3, criar pedido automático".**
+
+- Escolha a **Opção 4 (Gerenciar Produtos)**.  
+- Escolha **2 (Criar)**.  
+- Preencha:  
+  - Nome: **Mouse Gamer**  
+  - Quantidade: **2** (precisa ser `<= 3`)  
+  - Categoria: selecione a criada anteriormente  
+- Explicação:  
+  - O **ORM** insere o produto  
+  - O **Trigger do Banco** insere automaticamente o pedido
+
+---
+
+### 5️⃣ Prova Real (Validação)
+
+Vamos confirmar que o banco trabalhou sozinho:
+
+- Volte ao **Menu Principal**  
+- Escolha a **Opção 5 (Listar PEDIDOS)**  
+- **Resultado:** Aparece um pedido com **quantidade = 4** (regra do trigger) vinculado ao produto.
+
+---
+
+### 6️⃣ Consultas Avançadas (Requisito: Consultas N3)
+
+Para finalizar, mostramos as queries complexas exigidas:
+
+- Escolha a **Opção 6 (Consultas Específicas)**  
+- Teste as duas opções:  
+  - **Produtos por Categoria** → usa relacionamento  
+  - **Pedidos por Quantidade** → usa JOIN entre Pedido e Produto  
 
 
-As tabelas (em negrito) com os respectivos atributos também serão utilizadas na Avaliação Prática N3 da disciplina de Banco de Dados.
- 
-Desenvolver uma aplicação servidora em que cada 
-produto: cod_produto, nome_produto e qtde_produto 
-tenha categoria: id_categoria, nome_categoria. 
+## 📂 Estrutura do Projeto
+`src/models/`: Definição das tabelas (ORM) e configuração do Trigger (index.js).
 
-Condições:
-Quando a quantidade do produto for menor ou igual a 3, 
-registrar em 
+`src/controllers/`: Lógica das rotas.
 
-pedido: num_pedido, cod_produto, qtde_pedido, a quantidade de 4. 
-Se a quantidade for maior que 3 e menor que 7, registrar 3. 
-Do contrário não criar o registro em pedido.
+`src/service/`: Regras de negócio.
 
-Para a implementação da persistência de dados, utilize a técnica de ORM - Object Relational Mapping. 
+`src/routes/`: Endpoints da API.
 
-Essa aplicação tem que atender as requisições CRUD oriundas de qualquer cliente-server por meio de uma API Rest. 
+`sql/`: Scripts SQL puros (Trigger, Views, Procedure, Consultas) para documentação e entrega.
 
-Como também, permitir consultas de produto por categoria e por quantidade de pedido. 
+`menu_cli.js`: Cliente de terminal para testes rápidos.
 
-A tecnologia para a implementação da aplicação é de livre escolha pela dupla. 
-
-Além disso, inserir a utilização de token (JWT) em um dos end-points da API ou se preferir implemente uma funcionalidade de login (usuário e senha) com token.
+✅ Checklist de Entrega (N3)
+- [x] ORM: Utilizado Sequelize para persistência.
+- [x] Trigger: Implementado (Lógica: Qtde <= 3 gera Pedido de 4 un; Qtde entre 4-6 gera Pedido de 3 un).
+- [x] Consultas: Filtragem por Categoria e por Quantidade de Pedido implementadas.
+- [x] JWT: Autenticação via Token implementada.
+- [x] Views e Procedures: Scripts disponíveis na pasta sql/.
