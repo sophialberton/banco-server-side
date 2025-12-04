@@ -1,22 +1,31 @@
-const categoriaData = require('../data/categoria.data');
+const { Categoria } = require('../models/index');
 
 const criarCategoria = async (nome) => {
-    if (!nome) throw new Error('Nome da categoria é obrigatório');
-    return await categoriaData.criar(nome);
+    return await Categoria.create({ nome_categoria: nome });
 };
 
 const listarCategorias = async () => {
-    return await categoriaData.listar();
+    return await Categoria.findAll();
 };
 
 const atualizarCategoria = async (id, nome) => {
-    if (!id || !nome) throw new Error('ID e Nome são obrigatórios');
-    return await categoriaData.atualizar(id, nome);
+    const cat = await Categoria.findByPk(id);
+    if (!cat) throw new Error('Categoria não encontrada');
+    await cat.update({ nome_categoria: nome });
+    return cat;
 };
 
 const deletarCategoria = async (id) => {
-    if (!id) throw new Error('ID é obrigatório');
-    return await categoriaData.deletar(id);
+    const cat = await Categoria.findByPk(id);
+    if (!cat) throw new Error('Categoria não encontrada');
+    
+    try {
+        await cat.destroy();
+    } catch (err) {
+        // Erro de foreign key
+        throw new Error('Não é possível deletar: existem produtos vinculados.');
+    }
+    return true;
 };
 
 module.exports = { criarCategoria, listarCategorias, atualizarCategoria, deletarCategoria };

@@ -1,10 +1,9 @@
 const app = require('./src/app');
-const { initDatabase } = require('./src/data/db');
+const { dbSync } = require('./src/models/index'); // Importa do index dos models
 
-initDatabase().then(() => {
+// Sincroniza o banco e inicia o servidor
+dbSync().then(() => {
     app.listen(3000, () => {
-        console.log('Servidor N3 rodando na porta 3000');
+        console.log('Servidor N3 (Sequelize) rodando na porta 3000');
     });
-}).catch(err => {
-    console.error('Falha ao iniciar:', err);
 });

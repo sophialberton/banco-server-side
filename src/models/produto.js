@@ -1,34 +1,28 @@
-const { dataTypes } = require('sequelize')
-const db = require('../config/database')
-const categoria = require('./categoria')
+const { DataTypes } = require('sequelize');
+const db = require('../config/database');
 
-const produto = db.define('produto', {
+const Produto = db.define('Produto', {
     cod_produto: {
-        type: dataTypes.INTEGER,
+        type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true
     },
     nome_produto: {
-        type: dataTypes.STRING(100),
+        type: DataTypes.STRING(100),
         allowNull: false
     },
     qtde_produto: {
-        type: dataTypes.INTEGER,
+        type: DataTypes.INTEGER,
         allowNull: false
     },
+    // Foreign Key definida aqui explicitamente para o Sequelize entender o campo
     id_categoria: {
-        type: dataTypes.INTEGER,
-        references: {
-            model: categoria,
-            key: 'id_categoria'
-        }
+        type: DataTypes.INTEGER,
+        allowNull: false
     }
 }, {
     tableName: 'produto',
-    timestamps: false
-})
+    timestamps: false // Trigger cuida disso ou pode ativar se quiser created_at
+});
 
-produto.belongsTo(categoria, { foreignKey: 'id_categoria' })
-
-module.exports = produto
-
+module.exports = Produto;

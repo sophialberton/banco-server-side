@@ -1,28 +1,52 @@
-const usuarioData = require('../data/usuario.data');
+const { Usuario } = require('../models/index');
 const bcrypt = require('bcrypt');
 
 const criarUsuario = async (dados) => {
     if (!dados.username || !dados.password) throw new Error('Username e Password são obrigatórios');
     
-    // Hash da senha obrigatório
     const hash = await bcrypt.hash(dados.password, 10);
-    return await usuarioData.criar(dados, hash);
+    
+    try {
+        const novo = await Usuario.create({
+            username: dados.username,
+            password_hash: hash,
+            nome: dados.nome
+        });
+        // Remove hash do retorno por segurança
+        const { password_hash, ...usuarioSemSenha } = novo.toJSON();
+        return usuarioSemSenha;
+    } catch (err) {
+        if (err.name === 'SequelizeUniqueConstraintError') {
+            throw new Error('Username já existe');
+        }
+        throw err;
+    }
 };
 
 const listarUsuarios = async () => {
-    return await usuarioData.listar();
+    return await Usuario.findAll({
+        attributes: ['id', 'username', 'nome'] // Seleciona apenas campos seguros
+    });
 };
 
 const atualizarUsuario = async (id, dados) => {
-    let hash = null;
+    const usuario = await Usuario.findByPk(id);
+    if (!usuario) throw new Error('Usuário não encontrado');
+
+    let updateData = { ...dados };
     if (dados.password) {
-        hash = await bcrypt.hash(dados.password, 10);
+        updateData.password_hash = await bcrypt.hash(dados.password, 10);
     }
-    return await usuarioData.atualizar(id, dados, hash);
+    
+    await usuario.update(updateData);
+    return usuario;
 };
 
 const deletarUsuario = async (id) => {
-    return await usuarioData.deletar(id);
+    const usuario = await Usuario.findByPk(id);
+    if (!usuario) throw new Error('Usuário não encontrado');
+    await usuario.destroy();
+    return true;
 };
 
 module.exports = { criarUsuario, listarUsuarios, atualizarUsuario, deletarUsuario };

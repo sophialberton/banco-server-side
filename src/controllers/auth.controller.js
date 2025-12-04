@@ -1,66 +1,49 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { pool } = require('../data/db');
+const { Usuario } = require('../models/index');
 
 const JWT_SECRET = 'segredo_super_secreto';
 
-// Login
 exports.login = async (req, res) => {
-    const { username, password } = req.body;
-    let conn;
     try {
-        conn = await pool.getConnection();
-        const rows = await conn.query('SELECT * FROM usuario WHERE username = ?', [username]);
-        const user = rows[0];
+        const { username, password } = req.body;
+        
+        // Sequelize: findOne
+        const user = await Usuario.findOne({ where: { username } });
 
         if (!user || !(await bcrypt.compare(password, user.password_hash))) {
             return res.status(401).json({ erro: 'Credenciais inválidas' });
         }
 
-        // Correção para BigInt no ID se necessário
-        const userId = typeof user.id === 'bigint' ? user.id.toString() : user.id;
-
-        const token = jwt.sign({ id: userId, username: user.username }, JWT_SECRET, { expiresIn: '1h' });
+        const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, { expiresIn: '1h' });
         res.json({ token });
 
     } catch (err) {
-        console.error(err);
         res.status(500).json({ erro: err.message });
-    } finally {
-        if(conn) conn.release();
     }
 };
 
-// Registrar
 exports.register = async (req, res) => {
-    const { username, password, nome } = req.body;
-    let conn;
     try {
-        if (!username || !password) {
-            return res.status(400).json({ erro: 'Username e Password são obrigatórios' });
-        }
+        const { username, password, nome } = req.body;
+        if (!username || !password) return res.status(400).json({ erro: 'Dados incompletos' });
 
-        conn = await pool.getConnection();
         const hash = await bcrypt.hash(password, 10);
         
-        const result = await conn.query(
-            'INSERT INTO usuario (username, password_hash, nome) VALUES (?, ?, ?)', 
-            [username, hash, nome]
-        );
+        // Sequelize: create
+        const novo = await Usuario.create({
+            username,
+            password_hash: hash,
+            nome
+        });
 
-        // CORREÇÃO AQUI: Converter BigInt para String
-        const newId = result.insertId.toString();
-
-        res.status(201).json({ id: newId, username, nome });
+        res.status(201).json({ id: novo.id, username: novo.username, nome: novo.nome });
 
     } catch (err) {
-        if (err.code === 'ER_DUP_ENTRY') {
+        if (err.name === 'SequelizeUniqueConstraintError') {
             return res.status(400).json({ erro: 'Usuário já existe' });
         }
-        console.error(err); // Log do erro real no console
         res.status(500).json({ erro: err.message });
-    } finally {
-        if(conn) conn.release();
     }
 };
 
