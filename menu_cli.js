@@ -137,6 +137,7 @@ async function menuPrincipal() {
         console.log('2. Gerenciar Categorias');
         console.log('3. Gerenciar Produtos');
         console.log('4. Gerenciar Usuários');
+        console.log('5. Listar PEDIDOS (Tabela Automática)'); // <--- NOVA OPÇÃO
         console.log('0. Sair');
 
         const escolha = await rl.question('Escolha: ');
@@ -146,6 +147,7 @@ async function menuPrincipal() {
             case '2': await gerenciarCategorias(); break;
             case '3': await gerenciarProdutos(); break;
             case '4': await gerenciarUsuarios(); break;
+            case '5': await fazerRequisicao('/api/pedidos'); break; // <--- NOVA OPÇÃO
             case '0': rodando = false; break;
             default: console.log('Inválido.');
         }
