@@ -1,6 +1,5 @@
 const express = require('express');
-const router = express.Router(); // <--- Correção: "R" maiúsculo
-// Correção do caminho: saia da pasta 'routes' (..) e entre em 'controllers'
+const router = express.Router();
 const controller = require('../controllers/produtoController'); 
 
 router.post('/produto', controller.criar);
